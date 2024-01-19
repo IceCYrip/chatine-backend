@@ -23,7 +23,9 @@ router.post('/createuser', async (req, res) => {
       }
       const userID = await User.findOne({ email: req.body.email })
 
-      res.status(200).json(userID)
+      res
+        .status(200)
+        .json({ message: 'Account created successfully', id: userID._id })
     }
   } catch (error) {
     console.error(error.message)
