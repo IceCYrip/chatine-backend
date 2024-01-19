@@ -26,9 +26,8 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api/auth', require('./routes/auth'))
-app.use('/api/product', require('./routes/product'))
 
 app.listen(port, () => {
-  console.log(`Counterfeit app listening on port ${port}`)
+  console.log(`Chatine - AI chat app listening on port ${port}`)
 })
 connectToMongo()
