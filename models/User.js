@@ -15,9 +15,9 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
-  userType: {
+  profilePicture: {
     type: String,
-    required: true,
+    required: false,
   },
 })
 const User = mongoose.model('user', UserSchema)

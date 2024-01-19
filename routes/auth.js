@@ -19,12 +19,11 @@ router.post('/createuser', async (req, res) => {
           fullName: req.body.fullName,
           password: req.body.password,
           email: req.body.email,
-          userType: req.body.userType,
         })
       }
+      const userID = await User.findOne({ email: req.body.email })
 
-      const data = { fullName: user.fullName, userType: user.userType }
-      res.status(200).json(data)
+      res.status(200).json(userID)
     }
   } catch (error) {
     console.error(error.message)
@@ -79,12 +78,14 @@ router.get('/sendEmail', async (req, res) => {
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log(error)
+        res
+          .status(500)
+          .json({ message: 'Something went wrong while sending email' })
       } else {
         console.log('Email sent: ' + info.response)
+        res.status(200).json({ message: 'Email sent successfully' })
       }
     })
-
-    res.status(200).json({ message: 'Email sent successfully' })
   } catch (error) {
     console.error(error.message)
     res.status(500).send('Internal Server Error')
