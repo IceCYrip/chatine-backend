@@ -16,7 +16,6 @@ router.post('/createuser', async (req, res) => {
           .status(400)
           .json({ error: 'Sorry a user with this email already exists' })
       } else {
-        const otp = 176425
         // Create a new user
         user = await User.create({
           fullName: req.body.fullName,
@@ -24,25 +23,19 @@ router.post('/createuser', async (req, res) => {
           password: req.body.password,
           profilePicture: '',
           verified: false,
-          otp: otp,
         })
         const userID = await User.findOne({ email: req.body.email })
 
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
-            //Karan's email
-            // user: 'karansable16@gmail.com',
-            // pass: 'gsyx jpvm fjvb jeam',
-
-            //Chatine's helpdesk email
             user: 'chatinehelpdesk@gmail.com',
             pass: 'gwte eiyk lhzn tkcm',
           },
         })
 
         const mailOptions = {
-          from: 'karansable16@gmail.com',
+          from: 'chatinehelpdesk@gmail.com',
           to: req.body.email,
           subject: 'Verify your email',
           html: `<div>
@@ -50,20 +43,12 @@ router.post('/createuser', async (req, res) => {
           <label>Please click on the link below to verify you email address</label>
           <br />
           <br />
-          <a
-            style={{
-              textTransform: 'uppercase',
-              padding: '5px 10px',
-              border: '1px solid black',
-              backgroundColor: 'whitesmoke',
-            }}
-            href='http://localhost:5000/api/auth/verify?otp=${userID.otp}&_id=${userID._id}'
-          >
+          <a href='http://localhost:5000/api/auth/verify?_id=${userID._id}' >
             Verify
           </a>
           <br />
           <br />
-          <b>PLEASE DO NOT SHARE THE OTP WITH ANYONE YAY!</b>
+          <b>PLEASE DO NOT SHARE THIS LINK WITH ANYONE YAY!</b>
         </div>`,
         }
 
@@ -93,16 +78,15 @@ router.post('/createuser', async (req, res) => {
 // ROUTE 2: Verify the user using: POST "/api/auth/verify".
 router.get('/verify', async (req, res) => {
   try {
-    if (!!req.query.otp && !!req.query._id) {
+    if (!!req.query._id) {
       let user = await User.findById(req.query._id)
 
       const newBody = {
         fullName: user.fullName,
         email: user.email,
         password: user.password,
-        profilePicture: user.profilePicture,
+        profilePicture: user.profilePicture ?? '',
         verified: true,
-        otp: null,
       }
 
       try {
@@ -151,12 +135,11 @@ router.post('/login', async (req, res) => {
 
       if (user) {
         if (user.password == req.body.password) {
-          const data = {
-            id: user._id,
+          res.status(200).json({
+            _id: user._id,
             fullName: user.fullName,
-            email: user.email,
-          }
-          res.status(200).json(data)
+            message: 'Authentication Successful',
+          })
         } else {
           //Wrong Password
           res.status(400).json({ message: 'Incorrect credentials' })
@@ -187,7 +170,6 @@ router.post('/resetPassword', async (req, res) => {
           password: req.body.newPassword,
           profilePicture: user.profilePicture,
           verified: true,
-          otp: null,
         }
 
         await User.findByIdAndUpdate(req.body._id, newBody)
@@ -208,4 +190,56 @@ router.post('/resetPassword', async (req, res) => {
   }
 })
 
+//ROUTE 6: Forgot password using: GET: "/api/auth/forgotPassword"
+router.post('/forgotPassword', async (req, res) => {
+  try {
+    if (!!req.body.email) {
+      const userID = await User.findOne({ email: req.body.email })
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'chatinehelpdesk@gmail.com',
+          pass: 'gwte eiyk lhzn tkcm',
+        },
+      })
+
+      const mailOptions = {
+        from: 'chatinehelpdesk@gmail.com',
+        to: req.body.email,
+        subject: 'Reset Password',
+        html: `<div>
+        <label>Hello,</label> <br />
+        <label>Please click on the link below to reset your password</label>
+        <br />
+        <br />
+        <a href='${frontendURL}/changePassword/${userID._id}'>
+          Reset Password
+        </a>
+        <br />
+        <br />
+        <b>PLEASE DO NOT SHARE THIS LINK WITH ANYONE YAY!</b>
+      </div>`,
+      }
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error)
+          res
+            .status(500)
+            .json({ message: 'Something went wrong while sending email' })
+        } else {
+          console.log('Email sent: ', info.response)
+          res.status(200).json({ message: 'Email sent successfully' })
+        }
+      })
+    } else {
+      //user not found
+      res.status(404).json({ message: 'Details not found' })
+    }
+  } catch (error) {
+    console.error('Error: ', error.message)
+    res.status(500).send('Internal Server Error')
+  }
+})
 module.exports = router

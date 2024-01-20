@@ -19,13 +19,12 @@ const UserSchema = new Schema({
     type: String,
     required: false,
   },
-
-  verified: {
-    type: Boolean,
+  about: {
+    type: String,
     required: false,
   },
-  otp: {
-    type: Number,
+  verified: {
+    type: Boolean,
     required: false,
   },
 })
