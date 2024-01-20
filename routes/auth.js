@@ -31,8 +31,13 @@ router.post('/createuser', async (req, res) => {
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
-            user: 'karansable16@gmail.com',
-            pass: 'gsyx jpvm fjvb jeam',
+            //Karan's email
+            // user: 'karansable16@gmail.com',
+            // pass: 'gsyx jpvm fjvb jeam',
+
+            //Chatine's helpdesk email
+            user: 'chatinehelpdesk@gmail.com',
+            pass: 'gwte eiyk lhzn tkcm',
           },
         })
 
@@ -58,7 +63,7 @@ router.post('/createuser', async (req, res) => {
           </a>
           <br />
           <br />
-          <b>PLEASE DO NOT SHARE THE OTP WITH ANYONE YAY!</b>{' '}
+          <b>PLEASE DO NOT SHARE THE OTP WITH ANYONE YAY!</b>
         </div>`,
         }
 
@@ -122,9 +127,14 @@ router.post('/checkVerification', async (req, res) => {
   try {
     if (!!req.body._id) {
       let user = await User.findById(req.body._id)
-
-      res.status(200).json({ verificationStatus: user.verified })
+      if (user) {
+        res.status(200).json({ verificationStatus: user.verified })
+      } else {
+        //User does not exist
+        res.status(404).json({ message: 'Details not found' })
+      }
     } else {
+      //Details not found in API request
       res.status(404).json({ message: 'Details not found' })
     }
   } catch (error) {
@@ -188,6 +198,9 @@ router.post('/resetPassword', async (req, res) => {
           .status(400)
           .json({ message: 'Incorrect old password. Please try again' })
       }
+    } else {
+      //Details not found in API request
+      res.status(404).json({ message: 'Details not found' })
     }
   } catch (error) {
     console.error('Error: ', error.message)
