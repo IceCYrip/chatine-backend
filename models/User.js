@@ -19,6 +19,15 @@ const UserSchema = new Schema({
     type: String,
     required: false,
   },
+
+  verified: {
+    type: Boolean,
+    required: false,
+  },
+  otp: {
+    type: Number,
+    required: false,
+  },
 })
 const User = mongoose.model('user', UserSchema)
 module.exports = User
