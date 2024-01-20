@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer')
 
 const frontendURL = require('../urls')
 
-// ROUTE 1: Create a User using: POST "/api/auth/createuser". No login required
+// ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
 router.post('/createuser', async (req, res) => {
   try {
     if (!!req.body.fullName && !!req.body.email && !!req.body.password) {
@@ -52,7 +52,7 @@ router.post('/createuser', async (req, res) => {
               border: '1px solid black',
               backgroundColor: 'whitesmoke',
             }}
-            href='http://localhost:5000/api/auth/verify?otp=${userID.otp}&id=${userID._id}'
+            href='http://localhost:5000/api/auth/verify?otp=${userID.otp}&_id=${userID._id}'
           >
             Verify
           </a>
@@ -73,20 +73,23 @@ router.post('/createuser', async (req, res) => {
             res.status(200).json({ message: 'Email sent successfully' })
           }
         })
+        res.status(200).json({
+          _id: userID._id,
+          message: 'Please verify your email',
+        })
       }
-
-      res.status(200).json({ message: 'Please verify your email' })
     }
   } catch (error) {
     console.error(error.message)
     res.status(500).send('Internal Server Error')
   }
 })
-// ROUTE 1: Create a User using: POST "/api/auth/verify". No login required
+
+// ROUTE 2: Verify the user using: POST "/api/auth/verify".
 router.get('/verify', async (req, res) => {
   try {
-    if (!!req.query.otp && !!req.query.id) {
-      let user = await User.findById(req.query.id)
+    if (!!req.query.otp && !!req.query._id) {
+      let user = await User.findById(req.query._id)
 
       const newBody = {
         fullName: user.fullName,
@@ -97,8 +100,13 @@ router.get('/verify', async (req, res) => {
         otp: null,
       }
 
-      await User.findByIdAndUpdate(req.query.id, newBody)
-      console.log('Email verified successfully. Redirecting to ', frontendURL)
+      try {
+        await User.findByIdAndUpdate(req.query._id, newBody)
+        console.log('Email verified successfully. Redirecting to ', frontendURL)
+      } catch (error) {
+        console.log('Something went wrong while verifying user', error)
+      }
+
       res.redirect(frontendURL)
     } else {
       res.status(404).json({ message: 'Details not found' })
@@ -109,7 +117,23 @@ router.get('/verify', async (req, res) => {
   }
 })
 
-//Route 2: Login authentication
+// ROUTE 3: Check if the user is verified using: POST "/api/auth/checkVerification".
+router.post('/checkVerification', async (req, res) => {
+  try {
+    if (!!req.body._id) {
+      let user = await User.findById(req.body._id)
+
+      res.status(200).json({ verificationStatus: user.verified })
+    } else {
+      res.status(404).json({ message: 'Details not found' })
+    }
+  } catch (error) {
+    console.error('Error: ', error.message)
+    res.status(500).send('Internal Server Error')
+  }
+})
+
+//Route 4: Login authentication
 router.post('/login', async (req, res) => {
   if (!!req.body.email && !!req.body.password) {
     let user = await User.findOne({ email: req.body.email })
