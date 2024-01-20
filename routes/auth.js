@@ -133,27 +133,65 @@ router.post('/checkVerification', async (req, res) => {
   }
 })
 
-//Route 4: Login authentication
+//ROUTE 4: Login authentication using: POST "/api/auth/login"
 router.post('/login', async (req, res) => {
-  if (!!req.body.email && !!req.body.password) {
-    let user = await User.findOne({ email: req.body.email })
+  try {
+    if (!!req.body.email && !!req.body.password) {
+      let user = await User.findOne({ email: req.body.email })
 
-    if (user) {
-      if (user.password == req.body.password) {
-        const data = {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
+      if (user) {
+        if (user.password == req.body.password) {
+          const data = {
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+          }
+          res.status(200).json(data)
+        } else {
+          //Wrong Password
+          res.status(400).json({ message: 'Incorrect credentials' })
         }
-        res.status(200).json(data)
       } else {
+        //No user found
         res.status(400).json({ message: 'Incorrect credentials' })
       }
     } else {
-      res.status(400).json({ message: 'Incorrect credentials' })
+      res.status(404).json({ message: 'Details not found' })
     }
-  } else {
-    res.status(400).json({ message: 'Incorrect credentials' })
+  } catch (error) {
+    console.error('Error: ', error.message)
+    res.status(500).send('Internal Server Error')
+  }
+})
+
+//ROUTE 5: Reset password using: POST: "/api/auth/resetPassword"
+router.post('/resetPassword', async (req, res) => {
+  try {
+    if (!!req.body._id && !!req.body.oldPassword && !!req.body.newPassword) {
+      let user = await User.findById(req.body._id)
+
+      if (user.password == req.body.oldPassword) {
+        const newBody = {
+          fullName: user.fullName,
+          email: user.email,
+          password: req.body.newPassword,
+          profilePicture: user.profilePicture,
+          verified: true,
+          otp: null,
+        }
+
+        await User.findByIdAndUpdate(req.body._id, newBody)
+
+        res.status(200).json({ message: 'Password updated successfully' })
+      } else {
+        res
+          .status(400)
+          .json({ message: 'Incorrect old password. Please try again' })
+      }
+    }
+  } catch (error) {
+    console.error('Error: ', error.message)
+    res.status(500).send('Internal Server Error')
   }
 })
 
