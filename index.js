@@ -9,7 +9,7 @@ app.use(express.json())
 
 const corsOptions = {
   origin: 'http://localhost:3000', //Dev
-  origin: 'https://chatine.vercel.app/', //Production
+  // origin: 'https://chatine.vercel.app/', //Production
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204,
