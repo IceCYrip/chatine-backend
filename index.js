@@ -11,7 +11,7 @@ app.use(express.json())
 
 app.use(
   cors({
-    origin: true,
+    origin: 'http://localhost:3000', // or true to allow all origins
     methods: 'GET,HEAD,OPTIONS,POST,PUT',
     allowedHeaders:
       'Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization',
