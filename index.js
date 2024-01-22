@@ -6,7 +6,16 @@ const app = express()
 const port = 5000
 
 app.use(express.json())
-app.use(cors())
+
+const corsOptions = {
+  origin: 'http://localhost:3000', //Dev
+  origin: 'https://chatine.vercel.app/', //Production
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+}
+
+app.use(cors(corsOptions))
 
 // app.use(function (req, res, next) {
 //   //Enabling CORS
