@@ -7,26 +7,16 @@ const port = 5000
 
 app.use(express.json())
 
-const corsOptions = {
-  origin: 'http://localhost:3000', //Dev
-  // origin: 'https://chatine.vercel.app/', //Production
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  optionsSuccessStatus: 204,
-}
+// app.use(cors())
 
-app.use(cors(corsOptions))
-
-// app.use(function (req, res, next) {
-//   //Enabling CORS
-//   res.header('Access-Control-Allow-Origin', '*')
-//   res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT')
-//   res.header(
-//     'Access-Control-Allow-Headers',
-//     'Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization'
-//   )
-//   next()
-// })
+app.use(
+  cors({
+    origin: true,
+    methods: 'GET,HEAD,OPTIONS,POST,PUT',
+    allowedHeaders:
+      'Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization',
+  })
+)
 
 // Available Routes
 
