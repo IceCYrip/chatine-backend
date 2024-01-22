@@ -213,7 +213,7 @@ router.post('/forgotPassword', async (req, res) => {
         <label>Please click on the link below to reset your password</label>
         <br />
         <br />
-        <a href='${frontendURL}/changePassword/${userID._id}'>
+        <a href='${frontendURL}/reset-password/${userID._id}'>
           Reset Password
         </a>
         <br />
