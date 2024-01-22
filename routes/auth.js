@@ -3,7 +3,7 @@ const User = require('../models/User')
 const router = express.Router()
 const nodemailer = require('nodemailer')
 
-const frontendURL = require('../urls')
+const frontendURL = 'https://chatine.vercel.app'
 
 // ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
 router.post('/createuser', async (req, res) => {
