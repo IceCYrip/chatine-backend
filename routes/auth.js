@@ -262,7 +262,7 @@ router.post("/forgotPassword", async (req, res) => {
   }
 });
 
-// ROUTE 7: Get user details using: POST "/api/auth/getUser".
+// ROUTE 7: Get user details using: GET "/api/auth/getUser".
 router.get("/getUser/:_id", async (req, res) => {
   try {
     if (!!req.params._id) {
@@ -283,6 +283,23 @@ router.get("/getUser/:_id", async (req, res) => {
       }
     } else {
       res.status(406).json({ message: "Mandatory data not found" });
+    }
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// Timepass
+// ROUTE 8: Get user details using: get "/api/auth/getAll".
+router.get("/getAll", async (req, res) => {
+  try {
+    try {
+      let users = await User.find().select("-password  -__v -_id");
+
+      res.status(200).json(users);
+    } catch (error) {
+      res.status(404).json({ message: "Details not found" });
     }
   } catch (error) {
     console.error("Error: ", error.message);
