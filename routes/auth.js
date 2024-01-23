@@ -69,15 +69,21 @@ router.post("/createuser", async (req, res) => {
               .json({ message: "Something went wrong while sending email" });
           } else {
             console.log("Email sent: ", info.response);
-            res.status(200).json({ message: "Email sent successfully" });
+            // res.status(200).json({ message: "Email sent successfully" });
+
+            res.status(200).json({
+              _id: userID._id,
+              message:
+                "An email has been sent to you for verification. Please verify your email to login",
+            });
           }
         });
 
-        res.status(200).json({
-          _id: userID._id,
-          message:
-            "An email has been sent to you for verification. Please verify your email to login",
-        });
+        // res.status(200).json({
+        //   _id: userID._id,
+        //   message:
+        //     "An email has been sent to you for verification. Please verify your email to login",
+        // });
       }
     } else {
       res.status(406).json({ message: "Mandatory data not found" });
