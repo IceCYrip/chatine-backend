@@ -80,7 +80,7 @@ router.post("/createuser", async (req, res) => {
         });
       }
     } else {
-      res.status(404).json({ message: "Details not found" });
+      res.status(406).json({ message: "Mandatory data not found" });
     }
   } catch (error) {
     console.error(error.message);
@@ -89,13 +89,13 @@ router.post("/createuser", async (req, res) => {
 });
 
 // ROUTE 2: Verify the user using: POST "/api/auth/verify".
-router.get("/verify/:data", async (req, res) => {
+router.get("/verify/:_id", async (req, res) => {
   try {
-    if (!!req.params.data) {
+    if (!!req.params._id) {
       try {
-        let user = await User.findOne({ _id: req.params.data });
+        let user = await User.findOne({ _id: req.params._id });
         if (!user.verified) {
-          await User.findByIdAndUpdate(req.params.data, {
+          await User.findByIdAndUpdate(req.params._id, {
             verified: true,
           });
           console.log(
@@ -201,7 +201,7 @@ router.post("/resetPassword", async (req, res) => {
       }
     } else {
       //Details not found in API request
-      res.status(404).json({ message: "Details not found" });
+      res.status(406).json({ message: "Mandatory data not found" });
     }
   } catch (error) {
     console.error("Error: ", error.message);
@@ -253,8 +253,8 @@ router.post("/forgotPassword", async (req, res) => {
         }
       });
     } else {
-      //user not found
-      res.status(404).json({ message: "Details not found" });
+      //Details not recieved
+      res.status(406).json({ message: "Mandatory data not found" });
     }
   } catch (error) {
     console.error("Error: ", error.message);
@@ -263,11 +263,11 @@ router.post("/forgotPassword", async (req, res) => {
 });
 
 // ROUTE 7: Get user details using: POST "/api/auth/getUser".
-router.post("/getUser/:id", async (req, res) => {
+router.get("/getUser/:_id", async (req, res) => {
   try {
-    if (!!req.params.id) {
+    if (!!req.params._id) {
       try {
-        let user = await User.findOne({ _id: req.params.id });
+        let user = await User.findOne({ _id: req.params._id });
         if (user) {
           res.status(200).json({
             _id: user._id,
@@ -281,6 +281,8 @@ router.post("/getUser/:id", async (req, res) => {
       } catch (error) {
         res.status(404).json({ message: "Details not found" });
       }
+    } else {
+      res.status(406).json({ message: "Mandatory data not found" });
     }
   } catch (error) {
     console.error("Error: ", error.message);

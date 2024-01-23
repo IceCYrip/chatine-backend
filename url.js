@@ -5,10 +5,10 @@
 const frontendURL = "http://chatine.vercel.app";
 
 //Dev
-const backendURL = "http://localhost:5000";
+// const backendURL = "http://localhost:5000";
 
 //Production
-// const backendURL = "http://chatine-backend.vercel.app";
+const backendURL = "http://chatine-backend.vercel.app";
 
 module.exports = {
   frontendURL,
