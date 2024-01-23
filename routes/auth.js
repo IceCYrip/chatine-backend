@@ -1,215 +1,221 @@
-const express = require('express')
-const User = require('../models/User')
-const router = express.Router()
-const nodemailer = require('nodemailer')
+const express = require("express");
+const User = require("../models/User");
+const router = express.Router();
+const nodemailer = require("nodemailer");
 
-const frontendURL = 'https://chatine.vercel.app'
+const { frontendURL, backendURL } = require("../url");
 
 // ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
-router.post('/createuser', async (req, res) => {
+router.post("/createuser", async (req, res) => {
   try {
-    if (!!req.body.fullName && !!req.body.email && !!req.body.password) {
+    if (!!req.body.username && !!req.body.password && !!req.body.email) {
       // Check whether the user with this email exists already
-      let user = await User.findOne({ email: req.body.email })
-      if (user) {
-        return res
-          .status(400)
-          .json({ error: 'Sorry a user with this email already exists' })
+      let emailExists = await User.findOne({ email: req.body.email });
+      let usernameExists = await User.findOne({ username: req.body.username });
+
+      if (emailExists || usernameExists) {
+        let emailExistsErrorMessage =
+          "Sorry! a user with this email already exists";
+        let usernameExistsErrorMessage =
+          "Sorry! a user with this username already exists";
+
+        return res.status(400).json({
+          errors: emailExists
+            ? emailExistsErrorMessage
+            : usernameExistsErrorMessage,
+        });
       } else {
         // Create a new user
-        user = await User.create({
-          fullName: req.body.fullName,
+        let userID = await User.create({
+          fullName: "",
           email: req.body.email,
+          username: req.body.username,
           password: req.body.password,
-          profilePicture: '',
+          profilePicture: "",
           verified: false,
-        })
-        const userID = await User.findOne({ email: req.body.email })
+        });
 
         const transporter = nodemailer.createTransport({
-          service: 'gmail',
+          service: "gmail",
           auth: {
-            user: 'chatinehelpdesk@gmail.com',
-            pass: 'gwte eiyk lhzn tkcm',
+            user: "chatinehelpdesk@gmail.com",
+            pass: "gwte eiyk lhzn tkcm",
           },
-        })
+        });
 
         const mailOptions = {
-          from: 'chatinehelpdesk@gmail.com',
+          from: "chatinehelpdesk@gmail.com",
           to: req.body.email,
-          subject: 'Verify your email',
+          subject: "Verify your email",
           html: `<div>
-          <label>Hello children,</label> <br />
+          <label>Dear user,</label> <br />
           <label>Please click on the link below to verify you email address</label>
           <br />
           <br />
-          <a href='http://localhost:5000/api/auth/verify?_id=${userID._id}' >
+          <a href='${backendURL}/api/auth/verify/${userID._id}' >
             Verify
           </a>
           <br />
           <br />
           <b>PLEASE DO NOT SHARE THIS LINK WITH ANYONE YAY!</b>
         </div>`,
-        }
+        };
 
         transporter.sendMail(mailOptions, function (error, info) {
           if (error) {
-            console.log(error)
+            console.log(error);
             res
               .status(500)
-              .json({ message: 'Something went wrong while sending email' })
+              .json({ message: "Something went wrong while sending email" });
           } else {
-            console.log('Email sent: ', info.response)
-            res.status(200).json({ message: 'Email sent successfully' })
+            console.log("Email sent: ", info.response);
+            res.status(200).json({ message: "Email sent successfully" });
           }
-        })
+        });
         res.status(200).json({
           _id: userID._id,
-          message: 'Please verify your email',
-        })
+          message:
+            "An email has been sent to you for verification. Please verify your email to login",
+        });
       }
     }
   } catch (error) {
-    console.error(error.message)
-    res.status(500).send('Internal Server Error')
+    console.error(error.message);
+    res.status(500).send("Internal Server Error");
   }
-})
+});
 
 // ROUTE 2: Verify the user using: POST "/api/auth/verify".
-router.get('/verify', async (req, res) => {
+router.get("/verify/:data", async (req, res) => {
   try {
-    if (!!req.query._id) {
-      let user = await User.findById(req.query._id)
-
-      const newBody = {
-        fullName: user.fullName,
-        email: user.email,
-        password: user.password,
-        profilePicture: user.profilePicture ?? '',
-        verified: true,
+    if (!!req.params.data) {
+      let user = await User.findOne(req.params.data);
+      if (!user.verified) {
+        await User.findByIdAndUpdate(req.params.data, {
+          verified: true,
+        });
+        console.log(
+          "Email verified successfully. Redirecting to ",
+          frontendURL
+        );
+      } else {
+        console.log("Email already verified. Redirecting to ", frontendURL);
       }
-
-      try {
-        await User.findByIdAndUpdate(req.query._id, newBody)
-        console.log('Email verified successfully. Redirecting to ', frontendURL)
-      } catch (error) {
-        console.log('Something went wrong while verifying user', error)
-      }
-
-      res.redirect(frontendURL)
+      res.redirect(`${frontendURL}/verified/${user._id}`);
     } else {
-      res.status(404).json({ message: 'Details not found' })
+      console.log("Something went wrong while verifying user");
+      res.status(404).json({ message: "Details not found" });
     }
   } catch (error) {
-    console.error('Error: ', error.message)
-    res.status(500).send('Internal Server Error')
+    console.error("Error: ", error.message);
+    res.status(500).send("Internal Server Error");
   }
-})
+});
 
 // ROUTE 3: Check if the user is verified using: POST "/api/auth/checkVerification".
-router.post('/checkVerification', async (req, res) => {
+router.post("/checkVerification", async (req, res) => {
   try {
     if (!!req.body._id) {
-      let user = await User.findById(req.body._id)
+      let user = await User.findOne(req.body._id);
       if (user) {
-        res.status(200).json({ verificationStatus: user.verified })
+        res.status(200).json({ verificationStatus: user.verified });
       } else {
         //User does not exist
-        res.status(404).json({ message: 'Details not found' })
+        res.status(404).json({ message: "Details not found" });
       }
     } else {
       //Details not found in API request
-      res.status(404).json({ message: 'Details not found' })
+      res.status(404).json({ message: "Details not found" });
     }
   } catch (error) {
-    console.error('Error: ', error.message)
-    res.status(500).send('Internal Server Error')
+    console.error("Error: ", error.message);
+    res.status(500).send("Internal Server Error");
   }
-})
+});
 
 //ROUTE 4: Login authentication using: POST "/api/auth/login"
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
-    if (!!req.body.email && !!req.body.password) {
-      let user = await User.findOne({ email: req.body.email })
-
+    if (!!req.body.username && !!req.body.password) {
+      let user = await User.findOne({ username: req.body.username });
       if (user) {
         if (user.password == req.body.password) {
-          res.status(200).json({
-            _id: user._id,
-            fullName: user.fullName,
-            message: 'Authentication Successful',
-          })
+          if (user.verified) {
+            res.status(200).json({
+              _id: user._id,
+              fullName: user.fullName,
+              message: "Authentication Successful",
+            });
+          } else {
+            res.status(400).json({
+              message:
+                "Please verify through your email address before logging in. The verification link was sent to you when you signed up",
+            });
+          }
         } else {
           //Wrong Password
-          res.status(400).json({ message: 'Incorrect credentials' })
+          res.status(400).json({ message: "Incorrect credentials" });
         }
       } else {
         //No user found
-        res.status(400).json({ message: 'Incorrect credentials' })
+        res.status(400).json({ message: "Incorrect credentials" });
       }
     } else {
-      res.status(404).json({ message: 'Details not found' })
+      res.status(404).json({ message: "Details not found" });
     }
   } catch (error) {
-    console.error('Error: ', error.message)
-    res.status(500).send('Internal Server Error')
+    console.error("Error: ", error.message);
+    res.status(500).send("Internal Server Error");
   }
-})
+});
 
 //ROUTE 5: Reset password using: POST: "/api/auth/resetPassword"
-router.post('/resetPassword', async (req, res) => {
+router.post("/resetPassword", async (req, res) => {
   try {
     if (!!req.body._id && !!req.body.oldPassword && !!req.body.newPassword) {
-      let user = await User.findById(req.body._id)
+      let user = await User.findOne(req.body._id);
 
       if (user.password == req.body.oldPassword) {
-        const newBody = {
-          fullName: user.fullName,
-          email: user.email,
+        await User.findByIdAndUpdate(req.body._id, {
           password: req.body.newPassword,
-          profilePicture: user.profilePicture,
-          verified: true,
-        }
+        });
 
-        await User.findByIdAndUpdate(req.body._id, newBody)
-
-        res.status(200).json({ message: 'Password updated successfully' })
+        res.status(200).json({ message: "Password updated successfully" });
       } else {
         res
           .status(400)
-          .json({ message: 'Incorrect old password. Please try again' })
+          .json({ message: "Incorrect old password. Please try again" });
       }
     } else {
       //Details not found in API request
-      res.status(404).json({ message: 'Details not found' })
+      res.status(404).json({ message: "Details not found" });
     }
   } catch (error) {
-    console.error('Error: ', error.message)
-    res.status(500).send('Internal Server Error')
+    console.error("Error: ", error.message);
+    res.status(500).send("Internal Server Error");
   }
-})
+});
 
 //ROUTE 6: Forgot password using: GET: "/api/auth/forgotPassword"
-router.post('/forgotPassword', async (req, res) => {
+router.post("/forgotPassword", async (req, res) => {
   try {
     if (!!req.body.email) {
-      const userID = await User.findOne({ email: req.body.email })
+      const userID = await User.findOne({ email: req.body.email });
 
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        service: "gmail",
         auth: {
-          user: 'chatinehelpdesk@gmail.com',
-          pass: 'gwte eiyk lhzn tkcm',
+          user: "chatinehelpdesk@gmail.com",
+          pass: "gwte eiyk lhzn tkcm",
         },
-      })
+      });
 
       const mailOptions = {
-        from: 'chatinehelpdesk@gmail.com',
+        from: "chatinehelpdesk@gmail.com",
         to: req.body.email,
-        subject: 'Reset Password',
+        subject: "Reset Password",
         html: `<div>
-        <label>Hello,</label> <br />
+        <label>Hello user,</label> <br />
         <label>Please click on the link below to reset your password</label>
         <br />
         <br />
@@ -220,26 +226,26 @@ router.post('/forgotPassword', async (req, res) => {
         <br />
         <b>PLEASE DO NOT SHARE THIS LINK WITH ANYONE YAY!</b>
       </div>`,
-      }
+      };
 
       transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-          console.log(error)
+          console.log(error);
           res
             .status(500)
-            .json({ message: 'Something went wrong while sending email' })
+            .json({ message: "Something went wrong while sending email" });
         } else {
-          console.log('Email sent: ', info.response)
-          res.status(200).json({ message: 'Email sent successfully' })
+          console.log("Email sent: ", info.response);
+          res.status(200).json({ message: "Email sent successfully" });
         }
-      })
+      });
     } else {
       //user not found
-      res.status(404).json({ message: 'Details not found' })
+      res.status(404).json({ message: "Details not found" });
     }
   } catch (error) {
-    console.error('Error: ', error.message)
-    res.status(500).send('Internal Server Error')
+    console.error("Error: ", error.message);
+    res.status(500).send("Internal Server Error");
   }
-})
-module.exports = router
+});
+module.exports = router;
