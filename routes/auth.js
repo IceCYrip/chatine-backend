@@ -72,12 +72,15 @@ router.post("/createuser", async (req, res) => {
             res.status(200).json({ message: "Email sent successfully" });
           }
         });
+
         res.status(200).json({
           _id: userID._id,
           message:
             "An email has been sent to you for verification. Please verify your email to login",
         });
       }
+    } else {
+      res.status(404).json({ message: "Details not found" });
     }
   } catch (error) {
     console.error(error.message);
@@ -89,19 +92,23 @@ router.post("/createuser", async (req, res) => {
 router.get("/verify/:data", async (req, res) => {
   try {
     if (!!req.params.data) {
-      let user = await User.findOne(req.params.data);
-      if (!user.verified) {
-        await User.findByIdAndUpdate(req.params.data, {
-          verified: true,
-        });
-        console.log(
-          "Email verified successfully. Redirecting to ",
-          frontendURL
-        );
-      } else {
-        console.log("Email already verified. Redirecting to ", frontendURL);
+      try {
+        let user = await User.findOne({ _id: req.params.data });
+        if (!user.verified) {
+          await User.findByIdAndUpdate(req.params.data, {
+            verified: true,
+          });
+          console.log(
+            "Email verified successfully. Redirecting to ",
+            frontendURL
+          );
+        } else {
+          console.log("Email already verified. Redirecting to ", frontendURL);
+        }
+        res.redirect(`${frontendURL}/verified/${user._id}`);
+      } catch (error) {
+        res.status(404).json({ message: "Details not found" });
       }
-      res.redirect(`${frontendURL}/verified/${user._id}`);
     } else {
       console.log("Something went wrong while verifying user");
       res.status(404).json({ message: "Details not found" });
@@ -116,10 +123,11 @@ router.get("/verify/:data", async (req, res) => {
 router.post("/checkVerification", async (req, res) => {
   try {
     if (!!req.body._id) {
-      let user = await User.findOne(req.body._id);
-      if (user) {
+      try {
+        let user = await User.findOne({ _id: req.body._id });
+
         res.status(200).json({ verificationStatus: user.verified });
-      } else {
+      } catch (error) {
         //User does not exist
         res.status(404).json({ message: "Details not found" });
       }
@@ -138,12 +146,12 @@ router.post("/login", async (req, res) => {
   try {
     if (!!req.body.username && !!req.body.password) {
       let user = await User.findOne({ username: req.body.username });
+      console.log(user);
       if (user) {
         if (user.password == req.body.password) {
           if (user.verified) {
             res.status(200).json({
               _id: user._id,
-              fullName: user.fullName,
               message: "Authentication Successful",
             });
           } else {
@@ -173,18 +181,23 @@ router.post("/login", async (req, res) => {
 router.post("/resetPassword", async (req, res) => {
   try {
     if (!!req.body._id && !!req.body.oldPassword && !!req.body.newPassword) {
-      let user = await User.findOne(req.body._id);
+      try {
+        let user = await User.findOne({ _id: req.body._id });
 
-      if (user.password == req.body.oldPassword) {
-        await User.findByIdAndUpdate(req.body._id, {
-          password: req.body.newPassword,
-        });
+        if (user.password == req.body.oldPassword) {
+          await User.findByIdAndUpdate(req.body._id, {
+            password: req.body.newPassword,
+          });
 
-        res.status(200).json({ message: "Password updated successfully" });
-      } else {
-        res
-          .status(400)
-          .json({ message: "Incorrect old password. Please try again" });
+          res.status(200).json({ message: "Password updated successfully" });
+        } else {
+          res
+            .status(400)
+            .json({ message: "Incorrect old password. Please try again" });
+        }
+      } catch (error) {
+        //user not found
+        res.status(404).json({ message: "Details not found" });
       }
     } else {
       //Details not found in API request
@@ -248,4 +261,31 @@ router.post("/forgotPassword", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
+// ROUTE 7: Get user details using: POST "/api/auth/getUser".
+router.post("/getUser/:id", async (req, res) => {
+  try {
+    if (!!req.params.id) {
+      try {
+        let user = await User.findOne({ _id: req.params.id });
+        if (user) {
+          res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            username: user.username,
+            profilePicture: user.profilePicture,
+          });
+        } else {
+          res.status(404).json({ message: "Details not found" });
+        }
+      } catch (error) {
+        res.status(404).json({ message: "Details not found" });
+      }
+    }
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 module.exports = router;
