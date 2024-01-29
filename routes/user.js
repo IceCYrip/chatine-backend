@@ -2,6 +2,13 @@ const express = require('express')
 const User = require('../models/User')
 const router = express.Router()
 
+const multer = require('multer') // Multer is used for handling multipart/form-data (e.g., file uploads)
+const storage = multer.memoryStorage() // Use memory storage for base64 data
+const limits = {
+  fieldSize: 25 * 1024 * 1024, // 25 MB (adjust as needed)
+}
+const upload = multer({ storage, limits }) // Create a Multer instance without storage
+
 const { backendURL } = require('../url')
 
 // ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
@@ -113,39 +120,43 @@ router.get('/getUser/:_id', async (req, res) => {
 })
 
 // ROUTE 3: Update profile picture of the user using: POST "/api/user/update/profilePicture".
-router.get('/update/profilePicture', async (req, res) => {
-  try {
-    if (!!req.body.profilePic && !!req.body._id) {
-      try {
-        let user = await User.findOne({ _id: req.body._id })
+router.post(
+  '/update/profilePicture',
+  upload.single('image'),
+  async (req, res) => {
+    try {
+      if (!!req.body.image && !!req.body._id) {
+        try {
+          let user = await User.findOne({ _id: req.body._id })
 
-        if (!!user) {
-          try {
-            await User.findByIdAndUpdate(req.body._id, {
-              profilePicture: req.body.profilePic,
-            })
-            res
-              .status(200)
-              .json({ message: 'Profile Picture updated successfully' })
-          } catch (error) {
-            res.status(500).json({
-              message: 'Something went wrong while updating profile picture',
-            })
+          if (!!user) {
+            try {
+              await User.findByIdAndUpdate(req.body._id, {
+                profilePicture: req.body.image,
+              })
+              res
+                .status(200)
+                .json({ message: 'Profile Picture updated successfully' })
+            } catch (error) {
+              res.status(500).json({
+                message: 'Something went wrong while updating profile picture',
+              })
+            }
+          } else {
+            res.status(404).json({ message: 'Details not found' })
           }
-        } else {
+        } catch (error) {
           res.status(404).json({ message: 'Details not found' })
         }
-      } catch (error) {
-        res.status(404).json({ message: 'Details not found' })
+      } else {
+        res.status(406).json({ message: 'Mandatory data not found' })
       }
-    } else {
-      res.status(406).json({ message: 'Mandatory data not found' })
+    } catch (error) {
+      console.log('Error: ', error)
+      res.status(500).send('Internal Server Error')
     }
-  } catch (error) {
-    console.log('Error: ', error)
-    res.status(500).send('Internal Server Error')
   }
-})
+)
 
 // ROUTE 4: Update about of the user using: POST "/api/user/update/about".
 router.get('/update/about', async (req, res) => {
