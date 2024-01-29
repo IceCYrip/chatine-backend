@@ -27,6 +27,7 @@ const UserSchema = new Schema({
   about: {
     type: String,
     required: false,
+    default: "This is about section. Add your bio here.",
   },
   verified: {
     type: Boolean,
