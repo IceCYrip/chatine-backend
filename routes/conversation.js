@@ -1,10 +1,10 @@
-const express = require("express");
-const Conversation = require("../models/Conversation");
-const Message = require("../models/Message");
-const router = express.Router();
+const express = require('express')
+const Conversation = require('../models/Conversation')
+const User = require('../models/User')
+const router = express.Router()
 
 // ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
-router.post("/create", async (req, res) => {
+router.post('/create', async (req, res) => {
   try {
     if (!!req.body.participant1 && !!req.body.participant2) {
       let conversationExists =
@@ -13,46 +13,77 @@ router.post("/create", async (req, res) => {
         })) ??
         (await Conversation.findOne({
           participants: [req.body.participant2, req.body.participant1],
-        }));
+        }))
 
       if (!!conversationExists) {
-        res.status(403).json({ message: "Conversation already exists" });
+        res.status(403).json({ message: 'Conversation already exists' })
       } else {
         await Conversation.create({
           participants: [req.body.participant1, req.body.participant2],
-        });
-        res.status(201).json({ message: "Conversation created successfully" });
+        })
+        res.status(201).json({ message: 'Conversation created successfully' })
       }
     } else {
-      res.status(406).json({ message: "Mandatory data not found" });
+      res.status(406).json({ message: 'Mandatory data not found' })
     }
   } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal Server Error");
+    console.error(error.message)
+    res.status(500).send('Internal Server Error')
   }
-});
+})
 
 // ROUTE 2: Get conversation messages using: POST "/api/conversation/getUserConversations".
-router.post("/getUserConversations", async (req, res) => {
+router.post('/getUserConversations', async (req, res) => {
   try {
     if (!!req.body.userId) {
       // Retrieve conversations for the user
       try {
-        const userConversations = await Conversation.find({
+        const conversations = await Conversation.find({
           participants: req.body.userId,
-        });
-        res.status(200).json({ conversations: userConversations });
+        })
+
+        // Map conversations to the desired response format
+        const response = await Promise.all(
+          conversations.map(async (conversation) => {
+            // Find other participants in the conversation
+            const otherParticipants = conversation.participants.filter(
+              (id) => id !== req.body.userId
+            )
+
+            // Retrieve user information for other participants
+            const participantsInfo = await User.find({
+              _id: { $in: otherParticipants },
+            })
+
+            // Map user information to the desired format
+            const participants = participantsInfo.map((user) => ({
+              conversationID: conversation._id,
+              userID: user._id,
+              fullName: user.fullName,
+              profilePicture: user.profilePicture,
+            }))
+
+            return participants
+          })
+        )
+
+        // Flatten the array of arrays to a single array
+        const flattenedResponse = response.flat()
+
+        res.status(200).json({
+          conversations: flattenedResponse,
+        })
       } catch (error) {
-        console.log(error);
-        res.status(404).json({ message: "No conversation found" });
+        console.log(error)
+        res.status(404).json({ message: 'No conversation found' })
       }
     } else {
-      res.status(406).json({ message: "Mandatory data not found" });
+      res.status(406).json({ message: 'Mandatory data not found' })
     }
   } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal Server Error");
+    console.error(error.message)
+    res.status(500).send('Internal Server Error')
   }
-});
+})
 
-module.exports = router;
+module.exports = router
