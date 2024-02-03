@@ -6,7 +6,7 @@ const app = express()
 const port = 5000
 
 app.use(express.json())
-app.use(cors({ origin: 'https://chatine.vercel.app' }))
+app.use(cors())
 
 // Available Routes
 
