@@ -193,8 +193,41 @@ router.get('/update/about', async (req, res) => {
   }
 })
 
+// ROUTE 4: Update fullName of the user using: POST "/api/user/update/fullName".
+router.get('/update/fullName', async (req, res) => {
+  try {
+    if (!!req.body.fullName && !!req.body._id) {
+      try {
+        let user = await User.findOne({ _id: req.body._id })
+
+        if (!!user) {
+          try {
+            await User.findByIdAndUpdate(req.body._id, {
+              fullName: req.body.fullName,
+            })
+            res.status(200).json({ message: 'About updated successfully' })
+          } catch (error) {
+            res.status(500).json({
+              message: 'Something went wrong while updating fullName',
+            })
+          }
+        } else {
+          res.status(404).json({ message: 'Details not found' })
+        }
+      } catch (error) {
+        res.status(404).json({ message: 'Details not found' })
+      }
+    } else {
+      res.status(406).json({ message: 'Mandatory data not found' })
+    }
+  } catch (error) {
+    console.log('Error: ', error)
+    res.status(500).send('Internal Server Error')
+  }
+})
+
 // Timepass
-// ROUTE 5: Get user details using: get "/api/auth/getAll".
+// ROUTE 6: Get user details using: get "/api/auth/getAll".
 router.get('/getAll', async (req, res) => {
   try {
     try {
