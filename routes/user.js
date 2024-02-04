@@ -161,7 +161,7 @@ router.post(
 )
 
 // ROUTE 4: Update about of the user using: POST "/api/user/update/about".
-router.get('/update/about', async (req, res) => {
+router.post('/update/about', async (req, res) => {
   try {
     if (!!req.body.about && !!req.body._id) {
       try {
@@ -194,7 +194,7 @@ router.get('/update/about', async (req, res) => {
 })
 
 // ROUTE 4: Update fullName of the user using: POST "/api/user/update/fullName".
-router.get('/update/fullName', async (req, res) => {
+router.post('/update/fullName', async (req, res) => {
   try {
     if (!!req.body.fullName && !!req.body._id) {
       try {
