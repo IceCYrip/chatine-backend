@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
-const { Schema } = mongoose;
+const mongoose = require('mongoose')
+const { Schema } = mongoose
 
 const MessageSchema = new Schema({
   conversationId: {
     type: mongoose.SchemaTypes.ObjectId,
-    ref: "Conversation",
+    ref: 'Conversation',
     required: true,
   },
   senderId: {
@@ -15,10 +15,14 @@ const MessageSchema = new Schema({
     type: String,
     required: true,
   },
+  isImg: {
+    type: Boolean,
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
-const Message = mongoose.model("message", MessageSchema);
-module.exports = Message;
+})
+const Message = mongoose.model('message', MessageSchema)
+module.exports = Message
