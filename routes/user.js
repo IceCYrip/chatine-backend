@@ -205,7 +205,7 @@ router.post('/update/fullName', async (req, res) => {
             await User.findByIdAndUpdate(req.body._id, {
               fullName: req.body.fullName,
             })
-            res.status(200).json({ message: 'About updated successfully' })
+            res.status(200).json({ message: 'Full name updated successfully' })
           } catch (error) {
             res.status(500).json({
               message: 'Something went wrong while updating fullName',
