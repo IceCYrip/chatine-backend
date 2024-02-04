@@ -104,6 +104,7 @@ router.get('/getUser/:_id', async (req, res) => {
             fullName: user.fullName,
             username: user.username,
             profilePicture: user.profilePicture,
+            about: user.about,
           })
         } else {
           res.status(404).json({ message: 'Details not found' })
