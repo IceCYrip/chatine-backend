@@ -1,6 +1,7 @@
 const express = require('express')
 const User = require('../models/User')
 const router = express.Router()
+const nodemailer = require('nodemailer')
 
 const multer = require('multer') // Multer is used for handling multipart/form-data (e.g., file uploads)
 const storage = multer.memoryStorage() // Use memory storage for base64 data
