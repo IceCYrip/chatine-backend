@@ -10,6 +10,12 @@ const limits = {
 }
 const upload = multer({ storage, limits }) // Create a Multer instance without storage
 
+const OpenAI = require('openai')
+
+const openai = new OpenAI({
+  apiKey: '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',
+})
+
 const { backendURL } = require('../url')
 
 // ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
@@ -219,6 +225,23 @@ router.post('/update/fullName', async (req, res) => {
       }
     } else {
       res.status(406).json({ message: 'Mandatory data not found' })
+    }
+  } catch (error) {
+    console.log('Error: ', error)
+    res.status(500).send('Internal Server Error')
+  }
+})
+// ROUTE 4: Update fullName of the user using: POST "/api/user/generate".
+router.post('/generate', async (req, res) => {
+  try {
+    if (!!req.body.prompt) {
+      const image = await openai.images.generate({
+        prompt: req.body.prompt,
+      })
+
+      res.status(200).send(image.data[0])
+    } else {
+      res.status(400).json({ mesage: 'Details not found' })
     }
   } catch (error) {
     console.log('Error: ', error)
