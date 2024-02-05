@@ -13,7 +13,7 @@ const upload = multer({ storage, limits }) // Create a Multer instance without s
 const OpenAI = require('openai')
 
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey: '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',
 })
 
 const { backendURL } = require('../url')
