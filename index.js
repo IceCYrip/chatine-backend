@@ -10,6 +10,8 @@ require("dotenv").config();
 app.use(express.json());
 app.use(cors());
 
+require("dotenv").config();
+
 // Available Routes
 
 app.get("/", (req, res) => {

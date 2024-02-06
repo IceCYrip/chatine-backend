@@ -235,7 +235,7 @@ router.post("/generate", async (req, res) => {
     if (!!req.body.prompt) {
       const image = await openai.images.generate({
         prompt: req.body.prompt,
-        response_format: "b64_json",
+        response_format: "url",
       });
 
       res.status(200).send(image.data[0]);
