@@ -9,11 +9,9 @@ const limits = {
   fieldSize: 25 * 1024 * 1024, // 25 MB (adjust as needed)
 };
 const upload = multer({ storage, limits }); // Create a Multer instance without storage
-
 const OpenAI = require("openai");
-
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: process.env.API_KEY,
 });
 
 const { backendURL } = require("../url");
@@ -237,6 +235,7 @@ router.post("/generate", async (req, res) => {
     if (!!req.body.prompt) {
       const image = await openai.images.generate({
         prompt: req.body.prompt,
+        response_format: "b64_json",
       });
 
       res.status(200).send(image.data[0]);
