@@ -18,17 +18,17 @@ router.post('/create', async (req, res) => {
       if (isSecondPerson.verified) {
         let conversationExists =
           (await Conversation.findOne({
-            participants: [req.body.participant1, req.body.participant2],
+            participants: [req.body.participant1, isSecondPerson?._id],
           })) ??
           (await Conversation.findOne({
-            participants: [req.body.participant2, req.body.participant1],
+            participants: [isSecondPerson?._id, req.body.participant1],
           }))
 
         if (!!conversationExists) {
           res.status(403).json({ message: 'Conversation already exists' })
         } else {
           let newConversation = await Conversation.create({
-            participants: [req.body.participant1, req.body.participant2],
+            participants: [req.body.participant1, isSecondPerson?._id],
           })
           res.status(201).json({
             conversationID: newConversation._id,
