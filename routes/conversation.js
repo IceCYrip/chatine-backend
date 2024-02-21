@@ -25,10 +25,13 @@ router.post('/create', async (req, res) => {
         if (!!conversationExists) {
           res.status(403).json({ message: 'Conversation already exists' })
         } else {
-          await Conversation.create({
+          let newConversation = await Conversation.create({
             participants: [req.body.participant1, req.body.participant2],
           })
-          res.status(201).json({ message: 'Conversation created successfully' })
+          res.status(201).json({
+            conversationID: newConversation._id,
+            message: 'Conversation created successfully',
+          })
         }
       } else {
         res.status(400).json({ message: 'No user found with this username' })
