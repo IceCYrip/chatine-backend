@@ -12,7 +12,9 @@ router.post('/create', async (req, res) => {
       //secondPerson
       !!req.body.participant2
     ) {
-      let isSecondPerson = await User.findById(req.body.participant2)
+      let isSecondPerson = await User.findOne({
+        username: req.body.participant2,
+      })
       if (isSecondPerson.verified) {
         let conversationExists =
           (await Conversation.findOne({
