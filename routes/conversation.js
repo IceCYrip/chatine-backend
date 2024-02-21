@@ -6,22 +6,32 @@ const router = express.Router()
 // ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
 router.post('/create', async (req, res) => {
   try {
-    if (!!req.body.participant1 && !!req.body.participant2) {
-      let conversationExists =
-        (await Conversation.findOne({
-          participants: [req.body.participant1, req.body.participant2],
-        })) ??
-        (await Conversation.findOne({
-          participants: [req.body.participant2, req.body.participant1],
-        }))
+    if (
+      //user
+      !!req.body.participant1 &&
+      //secondPerson
+      !!req.body.participant2
+    ) {
+      let isSecondPerson = await User.findById(req.body.participant2)
+      if (isSecondPerson.verified) {
+        let conversationExists =
+          (await Conversation.findOne({
+            participants: [req.body.participant1, req.body.participant2],
+          })) ??
+          (await Conversation.findOne({
+            participants: [req.body.participant2, req.body.participant1],
+          }))
 
-      if (!!conversationExists) {
-        res.status(403).json({ message: 'Conversation already exists' })
+        if (!!conversationExists) {
+          res.status(403).json({ message: 'Conversation already exists' })
+        } else {
+          await Conversation.create({
+            participants: [req.body.participant1, req.body.participant2],
+          })
+          res.status(201).json({ message: 'Conversation created successfully' })
+        }
       } else {
-        await Conversation.create({
-          participants: [req.body.participant1, req.body.participant2],
-        })
-        res.status(201).json({ message: 'Conversation created successfully' })
+        res.status(400).json({ message: 'No user found with this username' })
       }
     } else {
       res.status(406).json({ message: 'Mandatory data not found' })
