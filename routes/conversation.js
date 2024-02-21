@@ -32,6 +32,9 @@ router.post('/create', async (req, res) => {
           })
           res.status(201).json({
             conversationID: newConversation._id,
+            userID: isSecondPerson._id,
+            fullName: isSecondPerson.fullName,
+            profilePicture: isSecondPerson.profilePicture,
             message: 'Conversation created successfully',
           })
         }
