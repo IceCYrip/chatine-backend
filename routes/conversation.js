@@ -3,7 +3,7 @@ const Conversation = require('../models/Conversation')
 const User = require('../models/User')
 const router = express.Router()
 
-// ROUTE 1: Create a User and send verification email using: POST "/api/auth/createuser".
+// ROUTE 1: Create a User and send verification email using: POST "/api/conversation/create".
 router.post('/create', async (req, res) => {
   try {
     if (
@@ -15,7 +15,7 @@ router.post('/create', async (req, res) => {
       let isSecondPerson = await User.findOne({
         username: req.body.participant2,
       })
-      if (isSecondPerson.verified) {
+      if (!!isSecondPerson?.verified) {
         let conversationExists =
           (await Conversation.findOne({
             participants: [req.body.participant1, isSecondPerson?._id],
